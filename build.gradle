@@ -24,6 +24,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+
+apply from: "$rootDir/gradle/quality/jacoco.gradle"
+tasks.named("check") { dependsOn tasks.named("jacocoTestReport") }
+
 tasks.named('test') {
     useJUnitPlatform()
 }

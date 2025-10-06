@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      JAVA_VERSION: '17'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Verification of gradle-wrapper
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'   # cached ~/.gradle and wrapper
+
+      # Additional cache layer and optimization Gradle processing
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+
+      - name: Build & Test (includes quality checks)
+        run: ./gradlew --no-daemon clean check jacocoTestReport
+
+      # test report publishing(HTML)
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/test/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # JaCoCo report publishing (HTML + XML)
+      - name: Upload JaCoCo report (HTML + XML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: |
+            **/build/reports/jacoco/test/**
+          if-no-files-found: ignore
+          retention-days: 7
