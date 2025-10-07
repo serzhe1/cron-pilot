@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CronPilotApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(CronPilotApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(CronPilotApplication.class, args);
+  }
 }
