@@ -25,3 +25,6 @@ replay_pid*
 
 # Idea
 .idea
+
+#db
+db/local/data
