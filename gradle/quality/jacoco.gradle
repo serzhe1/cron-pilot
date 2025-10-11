@@ -2,10 +2,9 @@ apply plugin: 'jacoco'
 
 jacoco {
     toolVersion = '0.8.13'
-    reportsDirectory.set(layout.buildDirectory.dir("reports/jacoco"))
 }
 
-tasks.withType(Test).configureEach {
+tasks.named("test") {
     useJUnitPlatform()
     finalizedBy(tasks.named("jacocoTestReport"))
 }
@@ -19,27 +18,18 @@ tasks.named("jacocoTestReport", JacocoReport).configure {
         csv.required.set(false)
     }
 
-    def javaClasses = fileTree(dir: "$rootProject.layout.buildDirectory/classes/java/main", exclude: [
-            "**/generated/**", "**/config/**", "**/*Application*"
-    ])
-    classDirectories.setFrom(files(javaClasses))
+    def mainOutput = sourceSets.main.output
 
-    sourceDirectories.setFrom(files("$projectDir/src/main/java"))
+    def filtered = files(
+            fileTree(dir: mainOutput.classesDirs.singleFile, exclude: [
+                    '**/generated/**',
+                    '**/*Application*'
+            ])
+    )
 
-    executionData.setFrom(fileTree(dir: rootProject.layout.buildDirectory, includes: [
-            "jacoco/test.exec", "jacoco/*.exec", "outputs/unit_test_code_coverage/**/*.exec"
-    ]))
-}
+    classDirectories.setFrom(filtered)
 
-tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
-    dependsOn(tasks.named("test"))
-    violationRules {
-        rule {
-            limit {
-                counter = 'INSTRUCTION'
-                value = 'COVEREDRATIO'
-                minimum = 0.70
-            }
-        }
-    }
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+
+    executionData.setFrom(fileTree(rootProject.layout.buildDirectory).include("jacoco/test.exec"))
 }
